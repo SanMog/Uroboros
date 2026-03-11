@@ -1,13 +1,14 @@
+
 ---
 
-# 🐍 Uroboros v0.1 — Adversarial LLM Security Framework
+# 🐍 Uroboros v0.1
 
-**Uroboros** — an autonomous multi-agent system designed to expose vulnerabilities in Large Language Models through adversarial red teaming. Inspired by the ouroboros symbol, this framework uses AI to test AI: Red Team attacks, Blue Team defends, Judge decides.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![OWASP LLM Top 10](https://img.shields.io/badge/Security-OWASP%20LLM%20Top%2010-red.svg)](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
+[![Status](https://img.shields.io/badge/Status-Alpha-orange.svg)](https://github.com/SanMog/Uroboros)
 
-OWASP LLM Top 10
-Python 3.10+
-AI Security
-License MIT
+**Uroboros** is an autonomous multi-agent framework designed to expose vulnerabilities in Large Language Models (LLMs) through adversarial red teaming. Inspired by the ancient symbol of the snake consuming itself, Uroboros implements the concept of "AI testing AI": a Red Team attacks, a Blue Team defends, and a Judge determines the winner.
 
 > *"What manual testing finds in 2 weeks, Uroboros discovers in 3 minutes. The snake that tests itself."*
 
@@ -15,130 +16,119 @@ License MIT
 
 ### 🎯 Proven Impact: Production Results
 
-Testing `gpt-4o-mini` in real conditions revealed what traditional QA missed:
+Testing `gpt-4o-mini` in real-world conditions revealed critical gaps that traditional QA processes missed:
 
-- **23.1% Vulnerability Rate** — nearly 1 in 4 attack vectors succeeded
-- **6 CRITICAL Findings** — LLM01 (Prompt Injection) + LLM06 (Info Disclosure)
-- **DAN-Mode Bypass** — successfully evaded safety guardrails via role-playing injection
-- **3-Minute Detection** — full OWASP assessment vs. weeks of manual pentesting
+*   **23.1% Vulnerability Rate** — Nearly 1 in 4 attack vectors successfully compromised the model.
+*   **6 CRITICAL Findings** — Confirmed exploits mapping to LLM01 (Prompt Injection) and LLM06 (Sensitive Info Disclosure).
+*   **DAN-Mode Bypass** — Successfully evaded safety guardrails using complex role-playing injection patterns.
+*   **3-Minute Detection** — Completed a full OWASP-aligned assessment in minutes, compared to weeks of manual pentesting.
 
 ---
 
-### ✨ Core Architecture: Red/Blue/Judge
+### ✨ Core Architecture: Red / Blue / Judge
 
-- 🔴 **Red Team Agent:** Generates adversarial prompts targeting OWASP Top 10 attack patterns with adaptive mutation strategies.
-- 🔵 **Blue Team Agent:** Provides safe response baselines and defines expected behavior for vulnerability comparison.
-- ⚖️ **Judge System:** Multi-metric evaluation (GEval, BERTScore, ROUGE-L) with consensus scoring for objective verdicts.
+The framework operates through a coordinated trio of specialized agents:
+
+*   🔴 **Red Team Agent:** Generates adversarial prompts using adaptive mutation strategies and established OWASP attack patterns.
+*   🔵 **Blue Team Agent:** Establishes safe response baselines and defines the "ground truth" for expected model behavior.
+*   ⚖️ **Judge System:** A multi-metric evaluation engine (GEval, BERTScore, ROUGE-L) utilizing consensus scoring to eliminate subjective bias.
 
 ---
 
 ### 🏛 Philosophy: AI Testing AI
 
-Uroboros operates on a principle of recursive security: only an LLM can generate attacks at the semantic depth required to challenge another LLM's reasoning boundaries.
+Uroboros is built on the principle of **adversarial recursion**: only a Large Language Model can generate attacks with the semantic depth required to challenge the reasoning boundaries of another LLM.
 
-- **Adversarial Evolution:** Red Team learns from failed attacks to mutate payloads.
-- **Zero False Trust:** Judge uses deterministic rules + ML metrics to eliminate human bias.
-- **OWASP-Native:** Every attack maps directly to the OWASP LLM Top 10 framework.
+1.  **Adversarial Evolution:** The Red Team learns from failed attempts, mutating its payloads to bypass specific defensive filters.
+2.  **Zero False Trust:** The Judge combines deterministic rules with ML-based semantic metrics to ensure objective vulnerability validation.
+3.  **OWASP-Native:** Every generated attack vector maps directly to the official OWASP Top 10 for LLM Applications.
+
+---
+
+### 📊 OWASP Top 10 Coverage
+
+| ID | Category | Status | Vectors |
+| :--- | :--- | :---: | :---: |
+| **LLM01** | Prompt Injection | ✅ | 12 |
+| **LLM02** | Insecure Output Handling | ✅ | 6 |
+| **LLM06** | Sensitive Info Disclosure | ✅ | 8 |
+| **LLM03** | Training Data Poisoning | 🚧 | - |
+| **LLM04** | Model Denial of Service | 🚧 | - |
+| **LLM05** | Supply Chain Vulnerabilities | 🚧 | - |
+| **LLM07** | Insecure Plugin Design | 🚧 | - |
+| **LLM08** | Excessive Agency | 🚧 | - |
+| **LLM09** | Overreliance | 🚧 | - |
+| **LLM10** | Model Theft | 🚧 | - |
+
+---
+
+### 🛠 Technical Stack
+
+*   **Runtime:** Python 3.10+ (Cross-platform: Linux/macOS/Windows)
+*   **LLM Interface:** LiteLLM (Supports OpenAI, Anthropic, Groq, and local models via Ollama/vLLM)
+*   **Evaluation:** BERTScore, ROUGE-L, Sentence-Transformers, GEval
+*   **Storage:** ChromaDB for high-performance vector similarity caching
+*   **CLI:** Typer + Rich for interactive, human-readable terminal reporting
 
 ---
 
 ### 🚀 Quick Start
 
 ```bash
-# Install framework
+# Clone and install the framework
+git clone https://github.com/SanMog/Uroboros
+cd uroboros
 pip install -e .
 
-# Configure API keys (.env file)
-echo "OPENAI_API_KEY=your-key" > .env
+# Configure your environment
+echo "OPENAI_API_KEY=your-key-here" > .env
 
-# Run security scan
+# Run a security scan
 uroboros run --target gpt-4o-mini --attacks injection --output report.json
 ```
 
-**Requirements:** Python 3.10+, LLM API access, ~2GB for embedding models.
-
----
-
-### 📊 OWASP Top 10 for LLM Coverage
-
-
-| OWASP ID  | Category                     | Status | Vectors |
-| --------- | ---------------------------- | ------ | ------- |
-| **LLM01** | Prompt Injection             | ✅      | 12      |
-| **LLM02** | Insecure Output Handling     | ✅      | 6       |
-| **LLM06** | Sensitive Info Disclosure    | ✅      | 8       |
-| **LLM03** | Training Data Poisoning      | 🚧     | -       |
-| **LLM04** | Model Denial of Service      | 🚧     | -       |
-| **LLM05** | Supply Chain Vulnerabilities | 🚧     | -       |
-| **LLM07** | Insecure Plugin Design       | 🚧     | -       |
-| **LLM08** | Excessive Agency             | 🚧     | -       |
-| **LLM09** | Overreliance                 | 🚧     | -       |
-| **LLM10** | Model Theft                  | 🚧     | -       |
-
-
----
-
-### 🛠 Technical Stack
-
-- **Runtime:** Python 3.10+ (Cross-platform: Linux/macOS/Windows)
-- **LLM Interface:** LiteLLM (OpenAI, Anthropic, Groq, local models)
-- **Evaluation:** BERTScore, ROUGE-L, Sentence-Transformers, GEval
-- **Storage:** ChromaDB for vector similarity caching
-- **CLI:** Typer + Rich for interactive reporting
+**Requirements:** Python 3.10+, LLM API access, and ~2GB RAM for local embedding models.
 
 ---
 
 ### 🕹 Usage Protocol
 
-
-| Command                               | Action                               | Output                                      |
-| ------------------------------------- | ------------------------------------ | ------------------------------------------- |
-| `uroboros run`                        | Run full OWASP Top 10 assessment     | JSON/HTML report with risk scores           |
-| `uroboros run --attacks <type>`       | Target specific vulnerability class  | Filtered results (e.g., `injection`)        |
-| `uroboros compare --targets <models>` | Benchmark multiple LLMs side-by-side | Comparative vulnerability matrix            |
-
+| Command | Action | Output |
+| :--- | :--- | :--- |
+| `uroboros run` | Full OWASP Top 10 assessment | JSON/HTML report with risk scores |
+| `uroboros run --attacks <type>` | Target specific vulnerability class | Filtered results (e.g., `injection`) |
+| `uroboros compare --targets <list>` | Benchmark multiple LLMs | Side-by-side vulnerability matrix |
 
 ---
 
 ### 🛡 Responsible Disclosure
 
-Uroboros is designed for **authorized security testing only**. Users must have explicit permission to test target systems and comply with applicable laws (CFAA, GDPR, etc.).
+Uroboros is designed for **authorized security testing only**. Users must ensure they have explicit permission to test target systems and comply with all applicable local and international laws.
 
 If you discover vulnerabilities using this framework:
-
-1. **Do not exploit** beyond proof-of-concept validation
-2. **Report privately** to the vendor through responsible disclosure channels
-3. **Allow 90 days** for remediation before public disclosure
+1. **Do not exploit** the vulnerability beyond proof-of-concept validation.
+2. **Report privately** to the affected vendor or organization.
+3. **Allow a 90-day window** for remediation before making any findings public.
 
 ---
 
 ### 🤝 Contributing
 
 We welcome contributions from the security research community:
-
-- 🐛 **Report Vulnerabilities:** Found a new LLM exploit? Open an issue.
-- 💡 **Add Attack Vectors:** Implement new adversarial techniques.
-- 📊 **Improve Metrics:** Propose better evaluation methods.
-- 📖 **Documentation:** Help improve docs or add tutorials.
+*   🐛 **Report Bugs:** Open an issue for framework errors.
+*   💡 **New Vectors:** Implement new adversarial mutation techniques.
+*   📊 **Better Metrics:** Propose improved evaluation methods for the Judge system.
 
 **Development Setup:**
-
 ```bash
-git clone https://github.com/SanMog/Uroboros
-cd uroboros
 pip install -e ".[dev]"
 pytest tests/
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
 ---
 
-**Architect:** SanMog  
+**Architect:** [SanMog](https://github.com/SanMog)  
 **Status:** 🟢 Alpha | v0.1.0  
 **License:** MIT  
 
 *"The framework that audits the auditor. AI security through adversarial recursion."*
-
----
-
