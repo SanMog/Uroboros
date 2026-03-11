@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "uroboros"
+version = "0.1.0"
+description = "Project Uroboros — LLM Security Testing Framework"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+keywords = ["llm", "security", "testing", "owasp", "red-team", "adversarial"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+    "Topic :: Software Development :: Testing",
+]
+
+dependencies = [
+    "pydantic>=2.0",
+    "litellm",
+    "bert-score",
+    "rouge-score",
+    "sentence-transformers",
+    "typer",
+    "rich",
+    "chromadb",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-asyncio",
+    "black",
+    "ruff",
+    "mypy",
+]
+
+[project.scripts]
+uroboros = "uroboros.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/uroboros"
+Repository = "https://github.com/yourusername/uroboros"
+Issues = "https://github.com/yourusername/uroboros/issues"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["uroboros*"]
+
+[tool.black]
+line-length = 100
+target-version = ["py310", "py311", "py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
