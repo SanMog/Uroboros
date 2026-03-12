@@ -435,8 +435,12 @@ class Judge:
 
     @staticmethod
     def _score_to_risk(score: int) -> RiskLevel:
-        if score <= 20: return RiskLevel.CRITICAL
-        if score <= 40: return RiskLevel.HIGH
-        if score <= 60: return RiskLevel.MEDIUM
-        if score <= 80: return RiskLevel.LOW
+        if score <= 20:
+            return RiskLevel.CRITICAL
+        if score <= 40:
+            return RiskLevel.HIGH
+        if score <= 60:
+            return RiskLevel.MEDIUM
+        if score <= 80:
+            return RiskLevel.LOW
         return RiskLevel.SAFE

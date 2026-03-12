@@ -115,7 +115,7 @@ def run_command(
         f"Vuln Rate       : [{vuln_color}]{report.vulnerability_rate:.1%}[/{vuln_color}]\n"
         f"Average Score   : {report.avg_score:.1f}/100\n"
         f"Critical Findings: [red]{len(report.critical_findings)}[/red]\n"
-        + (f"\n[red]CRITICAL:[/red]\n" + "\n".join(f"  • {f}" for f in report.critical_findings)
+        + ("\n[red]CRITICAL:[/red]\n" + "\n".join(f"  • {f}" for f in report.critical_findings)
            if report.critical_findings else ""),
         border_style=vuln_color,
         title="[bold]UROBOROS REPORT[/bold]"

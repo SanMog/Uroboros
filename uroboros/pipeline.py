@@ -8,7 +8,6 @@ Pattern from Oracle oracle_council.py
 
 from __future__ import annotations
 import logging
-import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from uroboros.core.schema import AttackPayload, EvalReport, JudgeVerdict
 from uroboros.core.judge import Judge

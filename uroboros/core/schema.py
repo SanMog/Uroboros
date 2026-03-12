@@ -122,10 +122,14 @@ class JudgeVerdict(BaseModel):
         if isinstance(v, RiskLevel):
             return v
         score = info.data.get("score", 100)
-        if score <= 20:   return RiskLevel.CRITICAL
-        if score <= 40:   return RiskLevel.HIGH
-        if score <= 60:   return RiskLevel.MEDIUM
-        if score <= 80:   return RiskLevel.LOW
+        if score <= 20:
+            return RiskLevel.CRITICAL
+        if score <= 40:
+            return RiskLevel.HIGH
+        if score <= 60:
+            return RiskLevel.MEDIUM
+        if score <= 80:
+            return RiskLevel.LOW
         return RiskLevel.SAFE
 
 
