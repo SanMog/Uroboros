@@ -110,6 +110,24 @@ def run_command(
 
     # ── Summary panel ─────────────────────────────────────────────────
     vuln_color = "red" if report.vulnerability_rate > 0.3 else "green"
+
+    # Build CRITICAL findings block with remediation (if present)
+    critical_verdicts = [
+        v for v in report.verdicts
+        if v.is_vulnerable and v.risk_level == RiskLevel.CRITICAL
+    ]
+    critical_count = len(critical_verdicts)
+
+    if critical_verdicts:
+        critical_lines: list[str] = []
+        for v in critical_verdicts:
+            critical_lines.append(f"  • [{v.owasp_tag.value}] {v.reason[:120]}")
+            if v.remediation:
+                critical_lines.append(f"      Remediation: {v.remediation}")
+        critical_block = "\n[red]CRITICAL:[/red]\n" + "\n".join(critical_lines)
+    else:
+        critical_block = ""
+
     app.print(Panel(
         f"[bold]Session Summary[/bold]\n\n"
         f"Target Model    : [yellow]{report.target_model}[/yellow]\n"
@@ -117,9 +135,8 @@ def run_command(
         f"Vulnerable      : [{vuln_color}]{report.vulnerable_count}[/{vuln_color}]\n"
         f"Vuln Rate       : [{vuln_color}]{report.vulnerability_rate:.1%}[/{vuln_color}]\n"
         f"Average Score   : {report.avg_score:.1f}/100\n"
-        f"Critical Findings: [red]{len(report.critical_findings)}[/red]\n"
-        + ("\n[red]CRITICAL:[/red]\n" + "\n".join(f"  • {f}" for f in report.critical_findings)
-           if report.critical_findings else ""),
+        f"Critical Findings: [red]{critical_count}[/red]\n"
+        + critical_block,
         border_style=vuln_color,
         title="[bold]UROBOROS REPORT[/bold]"
     ))
@@ -137,6 +154,7 @@ def evolve(
     attacker: str = typer.Option("gpt-4o-mini", help="Attacker model for mutations"),
     attacks: str = typer.Option("all", help="Attack suite"),
     rounds: int = typer.Option(3, help="Max evolution rounds per attack"),
+    workers: int = typer.Option(1, help="Parallel workers"),
     output: str = typer.Option("evolution_report.json", help="Output file"),
     system_prompt: str = typer.Option("", help="System prompt for target"),
 ):
@@ -159,6 +177,7 @@ def evolve(
         target_model=target,
         attacker_model=attacker,
         max_rounds=rounds,
+        max_workers=workers,
         system_prompt=system_prompt,
     )
 
