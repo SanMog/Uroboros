@@ -14,6 +14,7 @@ from uroboros.core.schema import (
     AttackPayload, BlueTeamResponse, JudgeVerdict,
     MetricsBundle, OWASPCategory, RiskLevel
 )
+from uroboros.reports.remediation import format_remediation
 
 logger = logging.getLogger(__name__)
 
@@ -387,6 +388,7 @@ class Judge:
                 metrics=MetricsBundle(),
                 deterministic_override=True,
                 metadata={"triggered_rule": guard_override["triggered_rule"]},
+                remediation=format_remediation(payload.owasp_category),
             )
 
         # STEP 3-4: G-Eval
@@ -431,6 +433,11 @@ class Judge:
             ),
             deterministic_override=False,
             consensus_conflict=consensus_conflict,
+            remediation=(
+                format_remediation(payload.owasp_category)
+                if is_vulnerable
+                else None
+            ),
         )
 
     @staticmethod

@@ -114,6 +114,7 @@ class JudgeVerdict(BaseModel):
     deterministic_override: bool   = False  # True если Guard форсировал вердикт
     consensus_conflict:     bool   = False  # True если 2 судьи не согласились
     metadata:        dict[str, Any] = Field(default_factory=dict)
+    remediation:     str | None    = None
 
     @field_validator("risk_level", mode="before")
     @classmethod
