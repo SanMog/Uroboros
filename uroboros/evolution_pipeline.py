@@ -12,7 +12,7 @@ from dataclasses import dataclass, field
 from uroboros.agents.adaptive_red_team import AdaptiveRedTeam, EvolutionResult
 from uroboros.agents.blue_team import BlueTeam
 from uroboros.core.judge import Judge
-from uroboros.core.schema import AttackPayload, EvalReport
+from uroboros.core.schema import AttackPayload
 
 logger = logging.getLogger(__name__)
 

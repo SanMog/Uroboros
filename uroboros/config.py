@@ -10,7 +10,6 @@ import itertools
 import threading
 from dataclasses import dataclass, field
 from dotenv import load_dotenv
-import anthropic
 
 load_dotenv()
 os.environ['ANTHROPIC_API_KEY'] = os.getenv('ANTHROPIC_API_KEY', '')

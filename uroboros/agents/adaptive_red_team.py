@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from litellm import completion
-from uroboros.core.schema import AttackPayload, JudgeVerdict, AttackType, OWASPCategory
+from uroboros.core.schema import AttackPayload, JudgeVerdict
 
 logger = logging.getLogger(__name__)
 
@@ -90,28 +90,47 @@ class AdaptiveRedTeam:
 
     def _mutate(self, original_prompt: str,
                 response_text: str, verdict: JudgeVerdict) -> str:
-        """Call attacker_model to generate a mutated attack prompt."""
-        try:
-            resp = completion(
-                model=self.attacker_model,
-                messages=[
-                    {"role": "system", "content": _MUTATION_SYSTEM},
-                    {"role": "user",   "content": _MUTATION_USER.format(
-                        original_prompt=original_prompt,
-                        response_text=response_text[:500],
-                        reason=verdict.reason[:300],
-                        score=verdict.score,
-                    )},
-                ],
-                max_tokens=200,
-                temperature=0.9,   # высокая температура = больше креативности
-            )
-            mutated = resp.choices[0].message.content.strip()
-            logger.debug(f"Mutation generated: {mutated[:100]}")
-            return mutated
-        except Exception as e:
-            logger.warning(f"Mutation failed: {e}")
-            return original_prompt  # fallback — повторяем оригинал
+        """Call attacker_model to generate a mutated attack prompt. With retry."""
+        import time
+
+        max_retries = 3
+        base_delay  = 10  # секунд
+
+        for attempt in range(max_retries):
+            try:
+                resp = completion(
+                    model=self.attacker_model,
+                    messages=[
+                        {"role": "system", "content": _MUTATION_SYSTEM},
+                        {"role": "user",   "content": _MUTATION_USER.format(
+                            original_prompt=original_prompt,
+                            response_text=response_text[:500],
+                            reason=verdict.reason[:300],
+                            score=verdict.score,
+                        )},
+                    ],
+                    max_tokens=200,
+                    temperature=0.9,
+                )
+                mutated = resp.choices[0].message.content.strip()
+                logger.debug(f"Mutation generated: {mutated[:100]}")
+                return mutated
+
+            except Exception as e:
+                err = str(e)
+                # Rate limit — ждём и повторяем
+                if "429" in err or "rate" in err.lower() or "quota" in err.lower():
+                    wait = base_delay * (2 ** attempt)  # 10s, 20s, 40s
+                    logger.warning(f"Rate limit hit, waiting {wait}s (attempt {attempt+1}/{max_retries})")
+                    time.sleep(wait)
+                    continue
+                # Другая ошибка — fallback
+                logger.warning(f"Mutation failed: {err[:80]}")
+                return original_prompt
+
+        # Все попытки исчерпаны
+        logger.warning("All retry attempts exhausted, using original prompt")
+        return original_prompt
 
     def run_evolution(
         self,
