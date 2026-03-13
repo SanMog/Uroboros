@@ -309,7 +309,7 @@ ruff check uroboros/
 
 ## 📄 License
 
-MIT — see [LICENSE](LICENSE)
+MIT
 
 ---
 
