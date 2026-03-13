@@ -13,6 +13,7 @@ from rich.table import Table
 from rich.panel import Panel
 from rich import box
 from uroboros.pipeline import UroborosPipeline
+from uroboros.evolution_pipeline import EvolutionPipeline
 from uroboros.attacks import prompt_injection, hallucination, pii_leak
 from uroboros.core.schema import RiskLevel
 
@@ -126,6 +127,68 @@ def run_command(
         with open(output, "w") as f:
             json.dump(report.model_dump(mode="json"), f, indent=2, default=str)
         app.print(f"\n[green]Report saved to {output}[/green]")
+
+
+@cli.command(name="evolve")
+def evolve(
+    target: str = typer.Option(..., help="Target model"),
+    attacker: str = typer.Option("gpt-4o-mini", help="Attacker model for mutations"),
+    attacks: str = typer.Option("all", help="Attack suite"),
+    rounds: int = typer.Option(3, help="Max evolution rounds per attack"),
+    output: str = typer.Option("evolution_report.json", help="Output file"),
+    system_prompt: str = typer.Option("", help="System prompt for target"),
+):
+    """Run adaptive evolution loop — The Uroboros."""
+    app.print(Panel(
+        f"[bold]UROBOROS EVOLUTION LOOP[/bold]\n"
+        f"Target: {target} | Attacker: {attacker} | Max rounds: {rounds}",
+        border_style="red"
+    ))
+
+    payloads = []
+    if attacks in ("injection", "all"):
+        payloads += prompt_injection.build_payloads(target)
+    if attacks in ("hallucination", "all"):
+        payloads += hallucination.build_payloads(target)
+    if attacks in ("pii", "all"):
+        payloads += pii_leak.build_payloads(target)
+
+    pipeline = EvolutionPipeline(
+        target_model=target,
+        attacker_model=attacker,
+        max_rounds=rounds,
+        system_prompt=system_prompt,
+    )
+
+    report = pipeline.run(payloads)
+
+    app.print(f"\n[bold green]{report.summary()}[/bold green]")
+
+    # Сохраняем JSON
+    with open(output, "w") as f:
+        json.dump({
+            "target_model": report.target_model,
+            "attacker_model": report.attacker_model,
+            "total_attacks": report.total_attacks,
+            "vuln_rate": report.vuln_rate,
+            "static_wins": report.static_wins,
+            "evolved_wins": report.evolved_wins,
+            "defended": report.defended,
+            "evolution_lift": report.evolution_lift,
+            "duration_seconds": report.duration_seconds,
+            "results": [
+                {
+                    "attack_type": r.original_payload.attack_type.value,
+                    "owasp": r.original_payload.owasp_category.value,
+                    "success": r.success,
+                    "rounds_needed": r.rounds_needed,
+                    "evolution_log": r.evolution_log,
+                }
+                for r in report.results
+            ]
+        }, f, indent=2)
+
+    app.print(f"[dim]Evolution report saved to {output}[/dim]")
 
 
 @cli.command(name="version")
