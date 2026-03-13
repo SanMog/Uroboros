@@ -69,6 +69,11 @@ class BlueTeam:
         except Exception as e:
             latency_ms = int((time.monotonic() - start_ms) * 1000)
             logger.error(f"BlueTeam error for attack {payload.attack_id}: {e}")
+
+            error_text = str(e).lower()
+            if any(s in error_text for s in ("502", "503", "timeout", "connection")):
+                raise
+
             return BlueTeamResponse(
                 attack_id=payload.attack_id,
                 response_text="",

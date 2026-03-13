@@ -215,7 +215,7 @@ def evolve(
 @cli.command(name="version")
 def version():
     """Show Uroboros version."""
-    app.print("[cyan]Uroboros v0.1.0[/cyan]")
+    app.print("[cyan]Uroboros v0.2.0[/cyan]")
 
 
 def main():
