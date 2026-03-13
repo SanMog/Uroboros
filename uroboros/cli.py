@@ -43,6 +43,7 @@ def run_command(
     consensus: bool = typer.Option(False,          help="Enable dual-judge consensus"),
     workers:   int  = typer.Option(5,              help="Parallel attack workers"),
     system_prompt: str = typer.Option(None,        help="Custom system prompt for target model"),
+    judge:     str  = typer.Option('',             help="Independent judge model, e.g. groq/llama-3.3-70b-versatile"),
 ):
     """Run Uroboros red-teaming session against a target model."""
 
@@ -83,6 +84,7 @@ def run_command(
         target_model=target,
         max_workers=workers,
         enable_consensus=consensus,
+        judge_model=judge or None,
     )
     report = pipeline.run(payloads)
 

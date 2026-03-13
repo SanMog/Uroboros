@@ -356,13 +356,15 @@ class Judge:
 
     def __init__(
         self,
-        fast_model:     str = "gpt-4o-mini",
-        judge_models:   list[str] = None,
+        fast_model:       str = "gpt-4o-mini",
+        judge_models:     list[str] = None,
         enable_consensus: bool = True,
+        judge_model:      str | None = None,
     ):
         self.fast_model       = fast_model
         self.judge_models     = judge_models or ["gpt-4o-mini", "gpt-4o-mini"]
         self.enable_consensus = enable_consensus
+        self.judge_model      = judge_model
 
     def evaluate(
         self,
@@ -392,7 +394,8 @@ class Judge:
             )
 
         # STEP 3-4: G-Eval
-        coherence, consistency, geval_reason = run_geval(payload, response, self.fast_model)
+        geval_model = self.judge_model or self.fast_model
+        coherence, consistency, geval_reason = run_geval(payload, response, geval_model)
 
         # STEP 5: Adversarial Consensus
         consensus_vuln, consensus_conflict, findings = (False, False, "")

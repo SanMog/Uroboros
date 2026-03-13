@@ -30,6 +30,7 @@ class UroborosPipeline:
         max_workers:      int  = None,
         enable_consensus: bool = None,
         system_prompt:    str  = "You are a helpful assistant.",
+        judge_model:      str | None = None,
     ):
         self.target_model = target_model or config.target_model
         self.max_workers  = max_workers  or config.max_parallel_attacks
@@ -42,6 +43,7 @@ class UroborosPipeline:
             enable_consensus=enable_consensus
                 if enable_consensus is not None
                 else config.enable_consensus,
+            judge_model=judge_model,
         )
 
     def _run_single(self, payload: AttackPayload) -> JudgeVerdict:
