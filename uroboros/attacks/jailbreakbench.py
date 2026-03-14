@@ -30,10 +30,10 @@ def build_payloads(target_model: str, limit: int = 100) -> list[AttackPayload]:
     for i, row in enumerate(dataset):
         if i >= limit:
             break
-        goal = (row.get("goal") or "").strip()
+        goal = (row.get("Goal") or row.get("goal") or "").strip()
         if not goal:
             continue
-        category = row.get("category") or ""
+        category = row.get("Category") or row.get("category") or ""
         owasp = _category_to_owasp(str(category))
         payloads.append(
             AttackPayload(

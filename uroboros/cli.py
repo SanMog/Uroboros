@@ -16,7 +16,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from uroboros.pipeline import UroborosPipeline
 from uroboros.evolution_pipeline import EvolutionPipeline
-from uroboros.attacks import prompt_injection, hallucination, pii_leak, semantic_drift
+from uroboros.attacks import prompt_injection, hallucination, pii_leak, semantic_drift, jailbreakbench
 from uroboros.agents.drift_agent import DriftAgent, DriftResult
 from uroboros.agents.adversarial_council import AdversarialCouncil, CouncilResult
 from uroboros.agents.blue_team import BlueTeam
@@ -159,6 +159,72 @@ def run_command(
     ))
 
     # ── JSON output ───────────────────────────────────────────────────
+    if output:
+        with open(output, "w") as f:
+            json.dump(report.model_dump(mode="json"), f, indent=2, default=str)
+        app.print(f"\n[green]Report saved to {output}[/green]")
+
+
+@cli.command(name="benchmark")
+def benchmark_command(
+    target: str = typer.Option("gpt-4o-mini", help="Target model to test"),
+    limit: int = typer.Option(50, help="Max number of JailbreakBench behaviors to run"),
+    output: str = typer.Option(None, help="Save JSON report to file"),
+    workers: int = typer.Option(5, help="Parallel attack workers"),
+):
+    """Run JailbreakBench benchmark: load behaviors from CSV and evaluate target model."""
+
+    app.print(Panel.fit(
+        f"[bold cyan]UROBOROS BENCHMARK (JailbreakBench)[/bold cyan]\n"
+        f"Target: [yellow]{target}[/yellow] | Limit: [yellow]{limit}[/yellow] | Workers: [yellow]{workers}[/yellow]",
+        border_style="cyan",
+    ))
+
+    try:
+        payloads = jailbreakbench.build_payloads(target_model=target, limit=limit)
+    except Exception as e:
+        app.print(f"[red]Failed to load JailbreakBench dataset: {e}[/red]")
+        raise typer.Exit(1)
+
+    if not payloads:
+        app.print("[red]No payloads loaded from JailbreakBench.[/red]")
+        raise typer.Exit(1)
+
+    app.print(f"\n[cyan]Loaded {len(payloads)} jailbreak payloads. Starting pipeline...[/cyan]\n")
+
+    pipeline = UroborosPipeline(target_model=target, max_workers=workers)
+    report = pipeline.run(payloads)
+
+    # Results table
+    table = Table(box=box.ROUNDED, show_header=True, header_style="bold cyan")
+    table.add_column("OWASP", style="yellow", width=8)
+    table.add_column("Score", justify="center", width=7)
+    table.add_column("Risk", justify="center", width=10)
+    table.add_column("Reason", style="dim", width=50)
+
+    for v in report.verdicts:
+        color = RISK_COLORS.get(v.risk_level, "white")
+        table.add_row(
+            v.owasp_tag.value,
+            str(v.score),
+            f"[{color}]{v.risk_level.value}[/{color}]",
+            v.reason[:80],
+        )
+
+    app.print(table)
+
+    vuln_color = "red" if report.vulnerability_rate > 0.3 else "green"
+    app.print(Panel(
+        f"[bold]Benchmark Summary[/bold]\n\n"
+        f"Target Model   : [yellow]{report.target_model}[/yellow]\n"
+        f"Total Attacks  : {report.total_attacks}\n"
+        f"Vulnerable     : [{vuln_color}]{report.vulnerable_count}[/{vuln_color}]\n"
+        f"Vuln Rate      : [{vuln_color}]{report.vulnerability_rate:.1%}[/{vuln_color}]\n"
+        f"Average Score  : {report.avg_score:.1f}/100",
+        border_style=vuln_color,
+        title="[bold]UROBOROS BENCHMARK REPORT[/bold]",
+    ))
+
     if output:
         with open(output, "w") as f:
             json.dump(report.model_dump(mode="json"), f, indent=2, default=str)
