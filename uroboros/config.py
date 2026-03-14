@@ -35,13 +35,27 @@ class UroborosConfig:
     # API keys loaded from env
     openai_keys:  list[str] = field(default_factory=list)
     groq_keys:    list[str] = field(default_factory=list)
+    gemini_keys:  list[str] = field(default_factory=list)
 
     def __post_init__(self):
         # Load all available keys from env
         self.openai_keys = self._load_keys("OPENAI_API_KEY")
         self.groq_keys   = self._load_keys("GROQ_API_KEY")
+
+        # Gemini uses explicit env names GEMINI_API_KEY, GEMINI_API_KEY2..4
+        self.gemini_keys = [
+            k for k in [
+                os.getenv("GEMINI_API_KEY", "").strip(),
+                os.getenv("GEMINI_API_KEY2", "").strip(),
+                os.getenv("GEMINI_API_KEY3", "").strip(),
+                os.getenv("GEMINI_API_KEY4", "").strip(),
+            ]
+            if k
+        ]
+
         self._openai_cycle = itertools.cycle(self.openai_keys) if self.openai_keys else None
         self._groq_cycle   = itertools.cycle(self.groq_keys)   if self.groq_keys   else None
+        self._gemini_cycle = itertools.cycle(self.gemini_keys) if self.gemini_keys else None
         self._lock = threading.Lock()
 
     @staticmethod
@@ -65,6 +79,11 @@ class UroborosConfig:
     def next_groq_key(self) -> str | None:
         with self._lock:
             return next(self._groq_cycle) if self._groq_cycle else None
+
+    def next_gemini_key(self) -> str | None:
+        """Thread-safe rotation of GEMINI_API_KEY, GEMINI_API_KEY2..4."""
+        with self._lock:
+            return next(self._gemini_cycle) if self._gemini_cycle else None
 
 
 # Global singleton

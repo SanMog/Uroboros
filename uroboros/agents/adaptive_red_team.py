@@ -11,6 +11,7 @@ import logging
 from dataclasses import dataclass, field
 from litellm import completion
 from uroboros.core.schema import AttackPayload, JudgeVerdict
+from uroboros.config import config
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,7 @@ class AdaptiveRedTeam:
             try:
                 resp = completion(
                     model=self.attacker_model,
+                    api_key=config.next_gemini_key() if "gemini" in self.attacker_model else None,
                     messages=[
                         {"role": "system", "content": _MUTATION_SYSTEM},
                         {"role": "user",   "content": _MUTATION_USER.format(
@@ -112,7 +114,8 @@ class AdaptiveRedTeam:
                     max_tokens=200,
                     temperature=0.9,
                 )
-                mutated = resp.choices[0].message.content.strip()
+                content = resp.choices[0].message.content
+                mutated = content.strip() if content else original_prompt
                 logger.debug(f"Mutation generated: {mutated[:100]}")
                 return mutated
 
