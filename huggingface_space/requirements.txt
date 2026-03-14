@@ -1,0 +1,5 @@
+gradio>=4.0.0
+uroboros==0.2.0
+litellm>=1.52.0
+python-dotenv>=1.0.0
+
