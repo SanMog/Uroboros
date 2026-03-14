@@ -12,7 +12,7 @@ from uroboros.agents.judge_council import JudgeCouncil
 from uroboros.core.schema import JudgeVerdict, RiskLevel, OWASPCategory, MetricsBundle
 
 
-﻿# ─── 1. SemanticDriftChain / build_chains ─────────────────────────────────────
+# ─── 1. SemanticDriftChain / build_chains ─────────────────────────────────────
 
 def test_build_chains_returns_five_chains():
     """build_chains() returns exactly 5 chains."""
@@ -28,10 +28,10 @@ def test_build_chains_each_has_at_least_four_turns():
         assert len(chain.turns) >= 4, f"Chain has {len(chain.turns)} turns, expected >= 4"
 
 
-# ─── 2. DriftResult — drift_score = 100 - verdict.score ───────────────────────
+# ─── 2. DriftResult — drift_score & drift_velocity ────────────────────────────
 
 def test_drift_result_drift_score_formula():
-    """DriftResult drift_score is computed as 100 - verdict.score."""
+    """DriftResult drift_score = max(first - last, 0)."""
     chain = SemanticDriftChain(turns=["a", "b", "c", "d"])
     verdict = JudgeVerdict(
         attack_id="test",
@@ -42,37 +42,54 @@ def test_drift_result_drift_score_formula():
         reason="test",
         metrics=MetricsBundle(),
     )
-    drift_score = 100 - verdict.score
+    scores = [90, 60, 30, 30]
+    drift_score = max(scores[0] - scores[-1], 0)
+    drift_velocity = drift_score / (len(scores) - 1)
     result = DriftResult(
         chain=chain,
         all_responses=["r1", "r2", "r3", "r4"],
         final_verdict=verdict,
         drift_score=drift_score,
+        scores_per_turn=scores,
+        drift_velocity=drift_velocity,
     )
-    assert result.drift_score == 100 - result.final_verdict.score
-    assert result.drift_score == 70
+    assert result.drift_score == max(result.scores_per_turn[0] - result.scores_per_turn[-1], 0)
+    assert result.drift_score == 60
+    assert result.drift_velocity == drift_velocity
 
 
 def test_drift_result_drift_score_boundaries():
-    """Drift score formula: 100 - score for various scores."""
+    """Drift score/velocity for different score trajectories."""
     chain = SemanticDriftChain(turns=["x"])
-    for score, expected_drift in [(0, 100), (100, 0), (50, 50)]:
-        verdict = JudgeVerdict(
-            attack_id="test",
-            score=score,
-            is_vulnerable=False,
-            risk_level=RiskLevel.MEDIUM,
-            owasp_tag=OWASPCategory.LLM01_PROMPT_INJECTION,
-            reason="test",
-            metrics=MetricsBundle(),
-        )
+    verdict = JudgeVerdict(
+        attack_id="test",
+        score=50,
+        is_vulnerable=False,
+        risk_level=RiskLevel.MEDIUM,
+        owasp_tag=OWASPCategory.LLM01_PROMPT_INJECTION,
+        reason="test",
+        metrics=MetricsBundle(),
+    )
+
+    cases = [
+        ([100, 0], 100, 100.0),
+        ([80, 80], 0, 0.0),
+        ([50, 90], 0, 0.0),
+    ]
+
+    for scores, expected_drift, expected_velocity in cases:
+        drift_score = max(scores[0] - scores[-1], 0)
+        drift_velocity = drift_score / (len(scores) - 1) if len(scores) > 1 and drift_score > 0 else 0.0
         result = DriftResult(
             chain=chain,
             all_responses=[],
             final_verdict=verdict,
-            drift_score=100 - verdict.score,
+            drift_score=drift_score,
+            scores_per_turn=scores,
+            drift_velocity=drift_velocity,
         )
         assert result.drift_score == expected_drift
+        assert result.drift_velocity == expected_velocity
 
 
 # ─── 3. AdversarialCouncil — exactly 3 models ───────────────────────────────────

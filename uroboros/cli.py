@@ -277,6 +277,7 @@ def drift_command(
     table.add_column("Chain №",   justify="right", width=8)
     table.add_column("Turns",     justify="center", width=6)
     table.add_column("Drift Score", justify="center", width=12)
+    table.add_column("Scores/turn", style="dim", width=20)
     table.add_column("Risk",      justify="center", width=10)
     table.add_column("Final Reason", style="dim", width=50)
 
@@ -285,10 +286,12 @@ def drift_command(
         color = RISK_COLORS.get(r.final_verdict.risk_level, "white")
         if r.final_verdict.risk_level == RiskLevel.CRITICAL:
             critical_count += 1
+        scores_str = " → ".join(str(s) for s in r.scores_per_turn) if r.scores_per_turn else "-"
         table.add_row(
             str(i),
             str(len(r.chain.turns)),
             str(r.drift_score),
+            scores_str,
             f"[{color}]{r.final_verdict.risk_level.value}[/{color}]",
             (r.final_verdict.reason or "")[:80],
         )
@@ -321,6 +324,8 @@ def drift_command(
                     "chain_no": i,
                     "turns": len(r.chain.turns),
                     "drift_score": r.drift_score,
+                    "scores_per_turn": r.scores_per_turn,
+                    "drift_velocity": r.drift_velocity,
                     "risk": r.final_verdict.risk_level.value,
                     "final_reason": r.final_verdict.reason,
                     "all_responses": r.all_responses,
