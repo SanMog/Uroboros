@@ -6,6 +6,7 @@ OWASP: harmful → LLM01, privacy → LLM06, else LLM01.
 
 from __future__ import annotations
 
+import hashlib
 import random
 
 from datasets import load_dataset
@@ -55,7 +56,8 @@ def build_payloads(
         owasp = _category_to_owasp(str(category))
 
         if apply_template:
-            template = random.Random(hash(goal)).choice(_JAILBREAK_TEMPLATES)
+            seed = int(hashlib.md5(goal.encode()).hexdigest(), 16) % (2**32)
+            template = random.Random(seed).choice(_JAILBREAK_TEMPLATES)
             prompt = template.replace("{goal}", goal.lower())
         else:
             prompt = goal

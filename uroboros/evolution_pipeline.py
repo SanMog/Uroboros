@@ -5,6 +5,7 @@ Phase 5: Orchestrates AdaptiveRedTeam across all attack payloads.
 """
 from __future__ import annotations
 import logging
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
@@ -30,6 +31,7 @@ class EvolutionReport:
     defended:          int = 0   # цель устояла все раунды
     results:           list[EvolutionResult] = field(default_factory=list)
     duration_seconds:  float = 0.0
+    _lock:             threading.Lock = field(default_factory=threading.Lock, repr=False)
 
     @property
     def vuln_rate(self) -> float:
@@ -108,16 +110,17 @@ class EvolutionPipeline:
             for future in as_completed(futures):
                 try:
                     result: EvolutionResult = future.result()
-                    report.results.append(result)
+                    with report._lock:
+                        report.results.append(result)
 
-                    # Классифицируем результат
-                    if result.success:
-                        if result.rounds_needed == 1:
-                            report.static_wins += 1   # Round 1 — без эволюции
+                        # Классифицируем результат
+                        if result.success:
+                            if result.rounds_needed == 1:
+                                report.static_wins += 1   # Round 1 — без эволюции
+                            else:
+                                report.evolved_wins += 1  # Нашли через мутацию
                         else:
-                            report.evolved_wins += 1  # Нашли через мутацию
-                    else:
-                        report.defended += 1
+                            report.defended += 1
 
                     completed += 1
                     print(f"  Evolution: {completed}/{len(payloads)}", end="\r")
