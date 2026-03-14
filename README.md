@@ -35,19 +35,14 @@ Uroboros implements four capabilities that don't exist elsewhere in a single fra
 ## 🏗 Architecture
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                        UROBOROS v1.0.0                               │
-│                                                                      │
-│  Adversarial Council          Evolution Loop          Judge Council  │
-│  ┌─────────────────┐         ┌──────────────┐        ┌───────────┐  │
-│  │ Attacker 1 (GPT)│         │              │        │ Judge 1   │  │
-│  │ Attacker 2 (Llm)├─vote──► │  Blue Team   ├──────► │ Judge 2   │  │
-│  │ Attacker 3 (Gem)│  best   │  (Target LLM)│        │ Judge 3   │  │
-│  └─────────────────┘  attack └──────┬───────┘        └─────┬─────┘  │
-│                                     │   mutation            │        │
-│                                     └───────────────────────┘        │
-│                                         feedback loop                │
-└──────────────────────────────────────────────────────────────────────┘
+Adversarial Council     Red Team          Blue Team        Judge Council
+┌─────────────────┐    ┌──────────┐      ┌───────────┐    ┌───────────┐
+│ Attacker 1 (GPT)│    │          │      │           │    │ Judge 1   │
+│ Attacker 2 (Llm)├──► │ Best     ├─────►│  Target   ├───►│ Judge 2   │
+│ Attacker 3 (Gem)│    │ Attack   │      │   LLM     │    │ Judge 3   │
+└─────────────────┘    └────▲─────┘      └───────────┘    └─────┬─────┘
+                            │                                    │
+                            └──────── mutation feedback ─────────┘
 ```
 
 ### Agent Roles
