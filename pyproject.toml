@@ -27,6 +27,7 @@ classifiers = [
 
 dependencies = [
     "pydantic>=2.0",
+    "datasets",
     "litellm",
     "bert-score",
     "rouge-score",
