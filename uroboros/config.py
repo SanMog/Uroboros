@@ -22,7 +22,7 @@ class UroborosConfig:
 
     # Judge models
     fast_judge_model: str   = "gpt-4o-mini"
-    enable_consensus: bool  = True
+    enable_consensus: bool  = False
 
     # Red Team
     red_team_model:   str   = "groq/llama-3.3-70b-versatile"  # free tier
