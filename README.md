@@ -48,6 +48,7 @@ This is the difference between a security checklist and a live adversary.
 | 🔴 **Red Team** | Generates and mutates adversarial prompts | Any LiteLLM model |
 | 🔵 **Blue Team** | Wraps target LLM, receives and responds to attacks | Any LiteLLM model |
 | ⚖️ **Judge** | 7-step evaluation pipeline, produces Score 0–100 | Independent model supported |
+| ⚖️⚖️⚖️ **Judge Council** | Multi-judge consensus (3 models, majority vote) | Any 3 LiteLLM models |
 
 ### Judge Pipeline (7 Steps)
 ```
@@ -187,10 +188,28 @@ Flag               Values                          Description
 --attacks          injection/pii/hallucination/all  Attack suite
 --system-prompt    string                          Custom system prompt
 --judge            model string                    Independent judge model
+--judge-council    3 models (comma-separated)      Multi-judge consensus (see below)
 --output           filepath                        Save JSON report
 --consensus        flag                            Enable dual-judge consensus
 --workers          int (default: 5)                Parallel workers
 ```
+
+#### Judge Council (Multi-Judge Consensus)
+
+Use `--judge-council` to employ 3 independent judges for consensus evaluation. Each judge evaluates the attack-response pair independently, and the final verdict is determined by:
+
+- **Majority vote** on vulnerability status (is_vulnerable)
+- **Average score** across all 3 judges
+- **Conflict detection** when judges disagree
+- **Agreement rate** metric (0.0-1.0)
+
+Example:
+```bash
+uroboros run --target gpt-4o-mini --attacks injection \
+  --judge-council "gpt-4o-mini,claude-haiku-4-5-20251001,groq/llama-3.3-70b-versatile"
+```
+
+This provides more robust evaluation by combining perspectives from different model architectures, reducing false positives/negatives from single-judge bias.
 
 ### `uroboros evolve` — Adaptive Evolution Loop
 
