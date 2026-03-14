@@ -89,7 +89,11 @@ class DriftAgent:
             owasp_category=OWASPCategory.LLM01_PROMPT_INJECTION,
             prompt=last_prompt,
             target_model=self.blue_team.model,
-            metadata={"full_chain_turns": chain.turns, "all_responses": all_responses},
+            metadata={
+                "full_chain_turns": chain.turns,
+                "all_responses": all_responses,
+                "evaluate_all_turns": True,
+            },
         )
         final_verdict = self.judge.evaluate(payload, last_response)
         drift_score = max(0, min(100, 100 - final_verdict.score))

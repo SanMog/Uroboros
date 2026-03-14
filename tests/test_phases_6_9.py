@@ -3,12 +3,6 @@ Unit tests for phases 6–9: SemanticDriftChain, DriftResult, AdversarialCouncil
 CouncilProposal, JudgeCouncil. No API calls — logic only.
 """
 
-import sys
-from unittest.mock import MagicMock
-
-# Avoid loading jailbreakbench (needs 'datasets') when importing attacks
-sys.modules["datasets"] = MagicMock()
-
 import pytest
 
 from uroboros.attacks.semantic_drift import SemanticDriftChain, build_chains
@@ -18,7 +12,7 @@ from uroboros.agents.judge_council import JudgeCouncil
 from uroboros.core.schema import JudgeVerdict, RiskLevel, OWASPCategory, MetricsBundle
 
 
-# ─── 1. SemanticDriftChain / build_chains ─────────────────────────────────────
+﻿# ─── 1. SemanticDriftChain / build_chains ─────────────────────────────────────
 
 def test_build_chains_returns_five_chains():
     """build_chains() returns exactly 5 chains."""

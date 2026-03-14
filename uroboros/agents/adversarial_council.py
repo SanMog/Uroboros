@@ -69,7 +69,12 @@ class AdversarialCouncil:
                 model=model,
                 messages=[
                     {"role": "system", "content": _COUNCIL_SYSTEM},
-                    {"role": "user", "content": _COUNCIL_USER.format(original_prompt=original_prompt)},
+                    {
+                        "role": "user",
+                        "content": _COUNCIL_USER.replace(
+                            "{original_prompt}", original_prompt
+                        ),
+                    },
                 ],
                 max_tokens=400,
                 temperature=0.7,

@@ -92,11 +92,9 @@ class JudgeCouncil:
         agreement_rate = self._calculate_agreement_rate(individual_verdicts)
         
         # Step 3: Determine consensus conflict
-        # Conflict occurs if all three judges disagree on vulnerability
-        # (i.e., votes are split: not all same and not 2-1 majority)
-        consensus_conflict = (vulnerable_votes != 0 and 
-                             vulnerable_votes != 3 and 
-                             agreement_rate < 0.67)  # Less than 2/3 agreement
+        # Conflict occurs if there is at least one vulnerable and one safe vote
+        # (i.e., not unanimous SAFE and not unanimous VULNERABLE).
+        consensus_conflict = vulnerable_votes in (1, 2)
         
         # Step 4: Majority vote on is_vulnerable
         final_is_vulnerable = vulnerable_votes >= 2
