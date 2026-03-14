@@ -97,6 +97,23 @@ class AdversarialCouncil:
         for model in self.attacker_models:
             variant_prompt = self._propose(model, original_prompt)
 
+            # Fallback: if attacker model clearly refuses, use original prompt
+            lowered = variant_prompt.lower()
+            refusal_markers = [
+                "i can't",
+                "i cannot",
+                "i must decline",
+                "i should not",
+                "i'm not able",
+            ]
+            if any(marker in lowered for marker in refusal_markers):
+                logger.debug(
+                    "Council proposal from %s looks like a refusal, "
+                    "falling back to original prompt",
+                    model,
+                )
+                variant_prompt = original_prompt
+
             variant_payload = AttackPayload(
                 attack_id=payload.attack_id,
                 attack_type=payload.attack_type,

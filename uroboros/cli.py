@@ -12,7 +12,7 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich import box
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
 
 from uroboros.pipeline import UroborosPipeline
 from uroboros.evolution_pipeline import EvolutionPipeline
