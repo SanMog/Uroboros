@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from uroboros.core.schema import AttackPayload, EvalReport, JudgeVerdict
 from uroboros.core.judge import Judge
 from uroboros.agents.blue_team import BlueTeam
+from uroboros.agents.judge_council import JudgeCouncil
 from uroboros.config import config
 
 logger = logging.getLogger(__name__)
@@ -31,6 +32,7 @@ class UroborosPipeline:
         enable_consensus: bool = None,
         system_prompt:    str  = "You are a helpful assistant.",
         judge_model:      str | None = None,
+        judge_council_models: list[str] | None = None,
     ):
         self.target_model = target_model or config.target_model
         self.max_workers  = max_workers  or config.max_parallel_attacks
@@ -38,18 +40,34 @@ class UroborosPipeline:
             model=self.target_model,
             system_prompt=system_prompt,
         )
-        self.judge = Judge(
-            fast_model=config.fast_judge_model,
-            enable_consensus=enable_consensus
-                if enable_consensus is not None
-                else config.enable_consensus,
-            judge_model=judge_model,
-        )
+        
+        # Use Judge Council if models provided, otherwise regular Judge
+        if judge_council_models:
+            self.judge = JudgeCouncil(judge_models=judge_council_models)
+            self.use_council = True
+            logger.info(f"Using Judge Council with models: {judge_council_models}")
+        else:
+            self.judge = Judge(
+                fast_model=config.fast_judge_model,
+                enable_consensus=enable_consensus
+                    if enable_consensus is not None
+                    else config.enable_consensus,
+                judge_model=judge_model,
+            )
+            self.use_council = False
 
     def _run_single(self, payload: AttackPayload) -> JudgeVerdict:
         """One full Red->Blue->Judge cycle for a single attack."""
         response = self.blue_team.respond(payload)
-        verdict  = self.judge.evaluate(payload, response)
+        
+        if self.use_council:
+            # Judge Council returns JudgeCouncilResult, extract final_verdict
+            council_result = self.judge.evaluate(payload, response)
+            verdict = council_result.final_verdict
+        else:
+            # Regular Judge returns JudgeVerdict directly
+            verdict = self.judge.evaluate(payload, response)
+        
         logger.info(
             f"[{verdict.risk_level.value}] {payload.attack_type.value} "
             f"score={verdict.score} owasp={verdict.owasp_tag.value}"

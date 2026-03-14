@@ -20,6 +20,7 @@ from uroboros.attacks import prompt_injection, hallucination, pii_leak, semantic
 from uroboros.agents.drift_agent import DriftAgent, DriftResult
 from uroboros.agents.adversarial_council import AdversarialCouncil, CouncilResult
 from uroboros.agents.blue_team import BlueTeam
+from uroboros.agents.judge_council import JudgeCouncil
 from uroboros.core.judge import Judge
 from uroboros.core.schema import RiskLevel
 
@@ -50,15 +51,25 @@ def run_command(
     workers:   int  = typer.Option(5,              help="Parallel attack workers"),
     system_prompt: str = typer.Option(None,        help="Custom system prompt for target model"),
     judge:     str  = typer.Option('',             help="Independent judge model, e.g. groq/llama-3.3-70b-versatile"),
+    judge_council: str = typer.Option('',          help="Use Judge Council with 3 models (comma-separated), e.g. gpt-4o-mini,claude-haiku-4-5-20251001,groq/llama-3.3-70b-versatile"),
 ):
     """Run Uroboros red-teaming session against a target model."""
 
+    # Parse judge council models if provided
+    judge_council_models = None
+    if judge_council:
+        judge_council_models = [m.strip() for m in judge_council.split(",") if m.strip()]
+        if len(judge_council_models) != 3:
+            app.print("[red]--judge-council requires exactly 3 comma-separated models.[/red]")
+            raise typer.Exit(1)
+    
     app.print(Panel.fit(
         f"[bold cyan]PROJECT UROBOROS[/bold cyan]\n"
         f"Target: [yellow]{target}[/yellow] | "
         f"Suite: [yellow]{attacks}[/yellow] | "
         f"Workers: [yellow]{workers}[/yellow]"
-        + (f"\nSystem Prompt: [dim]{system_prompt[:60]}...[/dim]" if system_prompt else ""),
+        + (f"\nSystem Prompt: [dim]{system_prompt[:60]}...[/dim]" if system_prompt else "")
+        + (f"\n[magenta]Judge Council: {', '.join(judge_council_models)}[/magenta]" if judge_council_models else ""),
         border_style="cyan"
     ))
 
@@ -91,6 +102,7 @@ def run_command(
         max_workers=workers,
         enable_consensus=consensus,
         judge_model=judge or None,
+        judge_council_models=judge_council_models,
     )
     report = pipeline.run(payloads)
 
