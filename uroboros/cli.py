@@ -12,9 +12,12 @@ from rich.console import Console
 from rich.table import Table
 from rich.panel import Panel
 from rich import box
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
 from uroboros.pipeline import UroborosPipeline
 from uroboros.evolution_pipeline import EvolutionPipeline
-from uroboros.attacks import prompt_injection, hallucination, pii_leak
+from uroboros.attacks import prompt_injection, hallucination, pii_leak, semantic_drift
+from uroboros.agents.drift_agent import DriftAgent, DriftResult
 from uroboros.core.schema import RiskLevel
 
 app     = Console()
@@ -145,6 +148,91 @@ def run_command(
     if output:
         with open(output, "w") as f:
             json.dump(report.model_dump(mode="json"), f, indent=2, default=str)
+        app.print(f"\n[green]Report saved to {output}[/green]")
+
+
+@cli.command(name="drift")
+def drift_command(
+    target:  str = typer.Option("gpt-4o-mini", help="Target model to test"),
+    output: str = typer.Option(None, help="Save JSON report to file"),
+    workers: int = typer.Option(3, help="Parallel workers for chains"),
+):
+    """Run semantic drift chains (LLM01 multi-turn) against the target model."""
+
+    app.print(Panel.fit(
+        f"[bold cyan]UROBOROS DRIFT[/bold cyan]\n"
+        f"Target: [yellow]{target}[/yellow] | Workers: [yellow]{workers}[/yellow]",
+        border_style="cyan",
+    ))
+
+    chains = semantic_drift.build_chains(target)
+    app.print(f"\n[cyan]Loaded {len(chains)} drift chains. Running...[/cyan]\n")
+
+    agent = DriftAgent(model=target)
+    results: list[DriftResult] = []
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        results = list(executor.map(agent.run_chain, chains))
+
+    # ── Results table ──────────────────────────────────────────────────
+    table = Table(box=box.ROUNDED, show_header=True, header_style="bold cyan")
+    table.add_column("Chain №",   justify="right", width=8)
+    table.add_column("Turns",     justify="center", width=6)
+    table.add_column("Drift Score", justify="center", width=12)
+    table.add_column("Risk",      justify="center", width=10)
+    table.add_column("Final Reason", style="dim", width=50)
+
+    critical_count = 0
+    for i, r in enumerate(results, 1):
+        color = RISK_COLORS.get(r.final_verdict.risk_level, "white")
+        if r.final_verdict.risk_level == RiskLevel.CRITICAL:
+            critical_count += 1
+        table.add_row(
+            str(i),
+            str(len(r.chain.turns)),
+            str(r.drift_score),
+            f"[{color}]{r.final_verdict.risk_level.value}[/{color}]",
+            (r.final_verdict.reason or "")[:80],
+        )
+
+    app.print(table)
+
+    # ── Summary panel ─────────────────────────────────────────────────
+    total = len(results)
+    avg_drift = sum(r.drift_score for r in results) / total if total else 0
+    summary_color = "red" if critical_count > 0 else "green"
+
+    app.print(Panel(
+        f"[bold]Drift Summary[/bold]\n\n"
+        f"Total chains     : {total}\n"
+        f"Avg drift score  : {avg_drift:.1f}/100\n"
+        f"Critical count   : [{summary_color}]{critical_count}[/{summary_color}]",
+        border_style=summary_color,
+        title="[bold]UROBOROS DRIFT REPORT[/bold]",
+    ))
+
+    # ── JSON output ───────────────────────────────────────────────────
+    if output:
+        report = {
+            "target_model": target,
+            "total_chains": total,
+            "avg_drift_score": round(avg_drift, 2),
+            "critical_count": critical_count,
+            "results": [
+                {
+                    "chain_no": i,
+                    "turns": len(r.chain.turns),
+                    "drift_score": r.drift_score,
+                    "risk": r.final_verdict.risk_level.value,
+                    "final_reason": r.final_verdict.reason,
+                    "all_responses": r.all_responses,
+                    "chain_turns": r.chain.turns,
+                }
+                for i, r in enumerate(results, 1)
+            ],
+        }
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(report, f, indent=2, ensure_ascii=False)
         app.print(f"\n[green]Report saved to {output}[/green]")
 
 
