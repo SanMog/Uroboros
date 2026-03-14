@@ -7,6 +7,7 @@ uroboros run --target gpt-4o-mini --attacks injection
 from __future__ import annotations
 import json
 import logging
+import math
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -213,6 +214,22 @@ def benchmark_command(
 
     app.print(table)
 
+    # 95% confidence interval for vuln_rate (Wilson score interval)
+    n = report.total_attacks
+    if n > 0:
+        p = report.vulnerability_rate
+        z = 1.96  # 95% CI
+        z2 = z * z
+        denom = 1 + z2 / n
+        radicand = (p * (1 - p) + z2 / (4 * n)) / n
+        margin = z * math.sqrt(radicand) / denom
+        center = (p + z2 / (2 * n)) / denom
+        ci_low = max(0.0, center - margin)
+        ci_high = min(1.0, center + margin)
+        ci_str = f"[{ci_low:.1%}, {ci_high:.1%}]"
+    else:
+        ci_str = "N/A"
+
     vuln_color = "red" if report.vulnerability_rate > 0.3 else "green"
     app.print(Panel(
         f"[bold]Benchmark Summary[/bold]\n\n"
@@ -220,6 +237,7 @@ def benchmark_command(
         f"Total Attacks  : {report.total_attacks}\n"
         f"Vulnerable     : [{vuln_color}]{report.vulnerable_count}[/{vuln_color}]\n"
         f"Vuln Rate      : [{vuln_color}]{report.vulnerability_rate:.1%}[/{vuln_color}]\n"
+        f"95% CI (Wilson): {ci_str}\n"
         f"Average Score  : {report.avg_score:.1f}/100",
         border_style=vuln_color,
         title="[bold]UROBOROS BENCHMARK REPORT[/bold]",
