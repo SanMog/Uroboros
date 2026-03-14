@@ -20,7 +20,6 @@ from uroboros.attacks import prompt_injection, hallucination, pii_leak, semantic
 from uroboros.agents.drift_agent import DriftAgent, DriftResult
 from uroboros.agents.adversarial_council import AdversarialCouncil, CouncilResult
 from uroboros.agents.blue_team import BlueTeam
-from uroboros.agents.judge_council import JudgeCouncil
 from uroboros.core.judge import Judge
 from uroboros.core.schema import RiskLevel
 

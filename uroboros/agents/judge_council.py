@@ -7,7 +7,6 @@ Final verdict is determined by majority vote with conflict detection.
 
 from __future__ import annotations
 import logging
-from typing import Any
 from pydantic import BaseModel, Field
 from uroboros.core.judge import Judge
 from uroboros.core.schema import (
