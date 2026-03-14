@@ -55,7 +55,7 @@ def build_payloads(
         owasp = _category_to_owasp(str(category))
 
         if apply_template:
-            template = random.choice(_JAILBREAK_TEMPLATES)
+            template = random.Random(hash(goal)).choice(_JAILBREAK_TEMPLATES)
             prompt = template.replace("{goal}", goal.lower())
         else:
             prompt = goal
