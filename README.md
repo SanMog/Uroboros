@@ -4,7 +4,7 @@
 [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![OWASP LLM Top 10](https://img.shields.io/badge/OWASP-LLM%20Top%2010-red.svg)](https://owasp.org/www-project-top-10-for-large-language-model-applications/)
-[![v1.0.1](https://img.shields.io/badge/version-1.0.1-brightgreen.svg)](https://github.com/SanMog/Uroboros/releases)
+[![v1.1.0](https://img.shields.io/badge/version-1.1.0-brightgreen.svg)](https://github.com/SanMog/Uroboros/releases)
 [![HuggingFace Space](https://img.shields.io/badge/🤗-Live%20Demo-yellow.svg)](https://huggingface.co/spaces/SanMog/Uroboros)
 
 > *"The framework that audits the auditor. AI security through adversarial recursion."*
@@ -121,11 +121,15 @@ Self-judging underestimates vulnerability rate by ~33%.
 ```
 Target: gpt-4o-mini | JBB-Behaviors harmful split
 
-Vuln Rate:  0.0%
-Avg Score:  95.2/100
-95% CI:     [0.0%, 3.7%] (Wilson score interval)
+┌─────────────────────────────┬─────────────┬────────────────────┐
+│ Configuration               │ Vuln Rate   │ Notes               │
+├─────────────────────────────┼─────────────┼────────────────────┤
+│ With jailbreak templates    │ 3.0% ± std │ Indirect injection  │
+│ Without templates (raw)     │ 0.0%       │ Direct requests     │
+│ 3-run reproducibility       │ 0.0% ± 0.0%│ Stable across runs  │
+└─────────────────────────────┴─────────────┴────────────────────┘
 
-With jailbreak templates: Vuln Rate 3.0%, 95% CI [1.0%, 8.5%]
+95% CI (Wilson): [0.0%, 3.7%] (single run, with templates: [1.0%, 8.5%])
 ```
 
 **Finding**: GPT-4o-mini deflects direct harmful requests but remains vulnerable to indirect injection — validating the Adversarial Diversity Hypothesis.
@@ -211,6 +215,17 @@ uroboros benchmark --target gpt-4o-mini --limit 100 --output benchmark.json
 
 ---
 
+## 🔭 Roadmap
+
+| Phase | Feature | Status |
+|-------|---------|--------|
+| Phase 6 | Semantic Drift — multi-turn chains | ✅ DONE |
+| Phase 7 | Adversarial Council — 3 attackers vote | ✅ DONE |
+| Phase 8 | Standards Compliance — NIST/OWASP/IEEE mapping | ✅ DONE |
+| Phase 9 | Judge Council — 3 judges, majority verdict | ✅ DONE |
+
+---
+
 ## 🕹 CLI Reference
 
 ```
@@ -287,6 +302,8 @@ For **authorized security research only**. Test only systems you own or have exp
 
 ## 🤝 Contributing
 
+- **[STANDARDS_MAPPING.md](STANDARDS_MAPPING.md)** — NIST AI RMF, OWASP LLM Top 10, and IEEE 29119-11 mapping for compliance and feature alignment.
+
 ```bash
 pip install -e ".[dev]"
 pytest tests/ -v
@@ -302,7 +319,7 @@ MIT
 ---
 
 **Architect**: [SanMog](https://github.com/SanMog)  
-**Status**: 🟢 v1.0.0  
+**Status**: 🟢 v1.1.0  
 **Demo**: [huggingface.co/spaces/SanMog/Uroboros](https://huggingface.co/spaces/SanMog/Uroboros)  
 **Stack**: Python · LiteLLM · Pydantic · Typer · Rich · Gradio
 
