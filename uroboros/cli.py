@@ -8,6 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+import statistics
 import typer
 from rich.console import Console
 from rich.table import Table
@@ -172,12 +173,14 @@ def benchmark_command(
     limit: int = typer.Option(50, help="Max number of JailbreakBench behaviors to run"),
     output: str = typer.Option(None, help="Save JSON report to file"),
     workers: int = typer.Option(5, help="Parallel attack workers"),
+    runs: int = typer.Option(1, help="Number of pipeline runs for statistics (mean ± std)"),
 ):
     """Run JailbreakBench benchmark: load behaviors from CSV and evaluate target model."""
 
     app.print(Panel.fit(
         f"[bold cyan]UROBOROS BENCHMARK (JailbreakBench)[/bold cyan]\n"
-        f"Target: [yellow]{target}[/yellow] | Limit: [yellow]{limit}[/yellow] | Workers: [yellow]{workers}[/yellow]",
+        f"Target: [yellow]{target}[/yellow] | Limit: [yellow]{limit}[/yellow] | Workers: [yellow]{workers}[/yellow]"
+        + (f" | Runs: [yellow]{runs}[/yellow]" if runs > 1 else ""),
         border_style="cyan",
     ))
 
@@ -194,7 +197,15 @@ def benchmark_command(
     app.print(f"\n[cyan]Loaded {len(payloads)} jailbreak payloads. Starting pipeline...[/cyan]\n")
 
     pipeline = UroborosPipeline(target_model=target, max_workers=workers)
-    report = pipeline.run(payloads)
+    reports: list = []
+    for run_no in range(1, runs + 1):
+        if runs > 1:
+            app.print(f"[dim]Run {run_no}/{runs}...[/dim]")
+        report = pipeline.run(payloads)
+        reports.append(report)
+
+    # Use last run for table (or first if single run)
+    report = reports[-1]
 
     # Results table
     table = Table(box=box.ROUNDED, show_header=True, header_style="bold cyan")
@@ -214,7 +225,7 @@ def benchmark_command(
 
     app.print(table)
 
-    # 95% confidence interval for vuln_rate (Wilson score interval)
+    # 95% confidence interval for vuln_rate (Wilson score interval) — use last report
     n = report.total_attacks
     if n > 0:
         p = report.vulnerability_rate
@@ -230,22 +241,45 @@ def benchmark_command(
     else:
         ci_str = "N/A"
 
-    vuln_color = "red" if report.vulnerability_rate > 0.3 else "green"
-    app.print(Panel(
+    vuln_rates = [r.vulnerability_rate for r in reports]
+    avg_scores = [r.avg_score for r in reports]
+    vuln_rate_mean = statistics.mean(vuln_rates)
+    vuln_rate_std = statistics.stdev(vuln_rates) if len(reports) > 1 else 0.0
+    avg_score_mean = statistics.mean(avg_scores)
+    avg_score_std = statistics.stdev(avg_scores) if len(reports) > 1 else 0.0
+
+    vuln_color = "red" if vuln_rate_mean > 0.3 else "green"
+    panel_body = (
         f"[bold]Benchmark Summary[/bold]\n\n"
         f"Target Model   : [yellow]{report.target_model}[/yellow]\n"
         f"Total Attacks  : {report.total_attacks}\n"
         f"Vulnerable     : [{vuln_color}]{report.vulnerable_count}[/{vuln_color}]\n"
         f"Vuln Rate      : [{vuln_color}]{report.vulnerability_rate:.1%}[/{vuln_color}]\n"
         f"95% CI (Wilson): {ci_str}\n"
-        f"Average Score  : {report.avg_score:.1f}/100",
+        f"Average Score  : {report.avg_score:.1f}/100"
+    )
+    if runs > 1:
+        panel_body += (
+            f"\n\nRuns           : {runs}\n"
+            f"Vuln Rate      : [{vuln_color}]{vuln_rate_mean:.1%} ± {vuln_rate_std:.1%}[/{vuln_color}]\n"
+            f"Avg Score      : {avg_score_mean:.1f} ± {avg_score_std:.1f}"
+        )
+    app.print(Panel(
+        panel_body,
         border_style=vuln_color,
         title="[bold]UROBOROS BENCHMARK REPORT[/bold]",
     ))
 
     if output:
-        with open(output, "w") as f:
-            json.dump(report.model_dump(mode="json"), f, indent=2, default=str)
+        out = report.model_dump(mode="json")
+        out["runs"] = runs
+        out["vuln_rate_mean"] = round(vuln_rate_mean, 6)
+        out["vuln_rate_std"] = round(vuln_rate_std, 6)
+        out["avg_score_mean"] = round(avg_score_mean, 2)
+        out["avg_score_std"] = round(avg_score_std, 2)
+        out["all_runs"] = [r.model_dump(mode="json") for r in reports]
+        with open(output, "w", encoding="utf-8") as f:
+            json.dump(out, f, indent=2, default=str, ensure_ascii=False)
         app.print(f"\n[green]Report saved to {output}[/green]")
 
 
