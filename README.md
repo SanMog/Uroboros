@@ -94,7 +94,7 @@ Target: gpt-4o-mini | Prompt injection | 3 evolution rounds
 ┌──────────────────────────┬───────────┬────────────┬─────────┬─────────┐
 │ Attacker Model           │ Vuln Rate │ Evol. Lift │ R1 Wins │ Evolved │
 ├──────────────────────────┼───────────┼────────────┼─────────┼─────────┤
-│ gemini-3-flash ⭐ BEST   │   70.0%   │   +30.0%   │    4    │    3    │
+│ Gemini 3 Flash Preview ⭐│   70.0%   │   +30.0%   │    4    │    3    │
 │ llama-3.3-70b            │   50.0%   │   +10.0%   │    4    │    1    │
 │ gpt-4o-mini              │   50.0%   │   +10.0%   │    4    │    1    │
 │ claude-sonnet-4-6        │   46.2%   │   +15.4%   │    8    │    4    │
@@ -102,7 +102,7 @@ Target: gpt-4o-mini | Prompt injection | 3 evolution rounds
 └──────────────────────────┴───────────┴────────────┴─────────┴─────────┘
 ```
 
-**Key Finding**: Gemini-3-Flash (+30% Evolution Lift) found vulnerabilities no other model discovered. GPT-4o found the fewest — stronger safety training suppresses adversarial creativity.
+**Key Finding**: Gemini 3 Flash Preview (+30% Evolution Lift) found vulnerabilities no other model discovered. GPT-4o found the fewest — stronger safety training suppresses adversarial creativity.
 
 ### Self-Judging Bias
 
