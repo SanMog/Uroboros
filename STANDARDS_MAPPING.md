@@ -10,7 +10,7 @@ Mapping of Uroboros framework capabilities to industry security and testing stan
 |------------------|---------------|---------------|----------|
 | Red-Team Pipeline (Red→Blue→Judge) | MEASURE | Testing & Evaluation | Full: automated adversarial testing loop with parallel workers |
 | Attack payloads (injection, hallucination, PII, jailbreak) | MAP | Context & Risk Identification | Full: predefined and generated attack vectors aligned to risk types |
-| Judge (7-step verdict: Distill, Guard, Semantic, GEval, Consensus, OWASP, Aggregate) | MEASURE | Performance & Accuracy | Full: multi-criteria scoring, deterministic guards, LLM-as-judge |
+| Judge (6-step verdict: Guard, Semantic, GEval, Consensus, OWASP, Aggregate) | MEASURE | Performance & Accuracy | Full: multi-criteria scoring, deterministic guards, LLM-as-judge |
 | Judge Council (3-model consensus) | MEASURE | Testing & Evaluation | Full: multi-judge agreement, conflict detection, majority verdict |
 | Dual-judge consensus mode | MEASURE | Performance & Accuracy | Partial: second opinion for VULNERABLE/SAFE disagreement |
 | Deterministic Guard (PII token, system prompt leak, injection markers, empty response) | MEASURE | Safety & Security | Full: hard rules override probabilistic scoring; CRITICAL on trigger |
